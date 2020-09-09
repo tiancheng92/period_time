@@ -55,3 +55,35 @@ func (pt PTSlice) Union() PTSlice {
 	}
 	return p
 }
+
+func (pt PTSlice) Intersect() PTSlice {
+	var p PTSlice
+	if len(pt) > 1 {
+		sort.Stable(pt)
+		p = append(p, pt[0])
+		for k, v := range pt {
+			if v.StartTime.Unix() > v.EndTime.Unix() {
+				return p
+			}
+			if k == 0 {
+				continue
+			}
+			if v.StartTime.Unix() >= p[0].StartTime.Unix() && v.StartTime.Unix() <= p[0].EndTime.Unix() {
+				p[0].StartTime = v.StartTime
+				if v.EndTime.Unix() <= p[0].EndTime.Unix() {
+					p[0].EndTime = v.EndTime
+				}
+			} else {
+				return p[:0]
+			}
+		}
+	}
+	return p
+}
+
+func (pt PTSlice) SumDuration() (sum int64) {
+	for i := 0; i < len(pt); i++ {
+		sum += pt[i].EndTime.Unix() - pt[i].StartTime.Unix()
+	}
+	return sum
+}
